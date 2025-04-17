@@ -39,7 +39,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 버튼 동작
-form_data = st.experimental_get_query_params()
+form_data = st.query_params
 if "prev" in form_data:
     st.session_state["menu_date"] = prev_day
     st.rerun()
