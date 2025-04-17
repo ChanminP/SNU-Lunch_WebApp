@@ -17,38 +17,46 @@ def format_kor_date(date: datetime, full: bool = False) -> str:
         return date.strftime(f"%Y-%m-%d({weekday_kor[date.weekday()]})")
     return date.strftime(f"%m/%d({weekday_kor[date.weekday()]})")
 
-# 버튼 날짜
+# 버튼 날짜 계산
 today_date = st.session_state["menu_date"]
 prev_day = today_date - timedelta(days=1)
 next_day = today_date + timedelta(days=1)
 
-# 버튼 영역
-col1, col2, col3 = st.columns([2, 4, 2])
-with col1:
-    if st.button(f"◀️ {format_kor_date(prev_day)}"):
-        st.session_state["menu_date"] = prev_day
-        st.rerun()
-with col3:
-    if st.button(f"{format_kor_date(next_day)} ▶️"):
-        st.session_state["menu_date"] = next_day
-        st.rerun()
+# 버튼 출력: 모바일에서도 동일 줄에 나오도록 CSS 스타일 조정
+st.markdown(f"""
+<div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap;'>
+    <form action="#" method="get">
+        <button onclick="window.location.href='#{format_kor_date(prev_day)}'" type="button" style="font-size: 16px; padding: 8px 14px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0; width: 48%;">
+            ◀️ {format_kor_date(prev_day)}
+        </button>
+    </form>
+    <form action="#" method="get">
+        <button onclick="window.location.href='#{format_kor_date(next_day)}'" type="button" style="font-size: 16px; padding: 8px 14px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0; width: 48%;">
+            {format_kor_date(next_day)} ▶️
+        </button>
+    </form>
+</div>
+""", unsafe_allow_html=True)
 
-# 헤더 출력
+# 버튼 기능 적용
+today_date = st.session_state["menu_date"]
+today_str = today_date.strftime("%Y-%m-%d")
+
+# 타이틀 및 날짜 헤더 출력
 st.markdown(f"""
 <h1 style='text-align: center; font-size: clamp(1.8rem, 4vw, 2.3rem);'>
-    🥗 서울대학교 점심 식단
+    🥗 서울대학교 점심 식당
 </h1>
 <p style='text-align: center; color: gray'>{format_kor_date(today_date, full=True)} 기준</p>
 """, unsafe_allow_html=True)
 
-# 웹 크롤링
-today_str = today_date.strftime("%Y-%m-%d")
+# 클롤링
 url = f"https://snuco.snu.ac.kr/foodmenu/?date={today_str}&orderby=DESC"
 response = requests.get(url)
 response.encoding = "utf-8"
 soup = BeautifulSoup(response.text, "html.parser")
 
-target_places = {"학생회관식당", "두레미담", "3식당", "301동식당", "302동식당"}
+target_places = {"학생회관식당", "두레미단", "3식당", "301동식당", "302동식당"}
 table = soup.find("table")
 rows_html = table.find_all("tr") if table else []
 menu_dict = {}
@@ -57,6 +65,7 @@ for row in rows_html[1:]:
     cols = row.find_all("td")
     if len(cols) < 3:
         continue
+
     raw_place = cols[0].get_text(strip=True)
     lunch_raw = cols[2].get_text("\n", strip=True)
 
@@ -69,8 +78,7 @@ for row in rows_html[1:]:
 
     lunch_lines = [line for line in lunch_raw.split('\n') if not line.strip().startswith('※')]
 
-    # 식당별 필터
-    if place == "두레미담":
+    if place == "두레미단":
         output_lines = []
         selpo_flag = False
         for line in lunch_lines:
@@ -95,7 +103,6 @@ for row in rows_html[1:]:
                 output_lines.append(line)
         lunch_lines = output_lines
 
-    # 중복 제거
     seen = set()
     cleaned_lines = []
     for line in lunch_lines:
@@ -106,11 +113,9 @@ for row in rows_html[1:]:
     if cleaned_lines:
         menu_dict[place] = cleaned_lines
 
-# 테이블 생성
 rows = [{"식당": k, "메뉴": "<br>".join(v)} for k, v in menu_dict.items()]
 df = pd.DataFrame(rows, columns=["식당", "메뉴"])
 
-# 스타일링
 st.markdown("""
 <style>
 main {
@@ -139,5 +144,5 @@ tbody td, tbody th {
 </style>
 """, unsafe_allow_html=True)
 
-# 출력
 st.write(df.to_html(index=False, escape=False), unsafe_allow_html=True)
+
