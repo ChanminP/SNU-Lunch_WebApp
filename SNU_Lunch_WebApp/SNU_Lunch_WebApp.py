@@ -29,17 +29,6 @@ with col3:
     if st.button(f"{format_kor_date(next_day)} ▶️"):
         st.session_state["menu_date"] = next_day
 
-# 버튼 영역
-st.markdown("""
-    <div style='display: flex; justify-content: space-between; align-items: center;'>
-        <form action="" method="post">
-            <button name="prev" type="submit">◀️ {}</button>
-        </form>
-        <form action="" method="post">
-            <button name="next" type="submit">{} ▶️</button>
-        </form>
-    </div>
-""".format(format_kor_date(prev_day), format_kor_date(next_day)), unsafe_allow_html=True)
 
 # 버튼 처리
 if st.session_state.get("_form_data"):
