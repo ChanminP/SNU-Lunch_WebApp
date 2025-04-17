@@ -7,17 +7,27 @@ import platform
 
 st.set_page_config(page_title="서울대 점심 식단", layout="centered")
 
-# 현재 날짜 설정
+# 기본 날짜 설정
 if "menu_date" not in st.session_state:
     st.session_state["menu_date"] = datetime.now()
 
-# 전날/다음날 계산
-menu_date = st.session_state["menu_date"]
-prev_day = menu_date - timedelta(days=1)
-next_day = menu_date + timedelta(days=1)
+# 날짜 계산 함수
+def format_kor_date(date: datetime) -> str:
+    weekday_kor = ["월", "화", "수", "목", "금", "토", "일"]
+    return date.strftime(f"%m/%d({weekday_kor[date.weekday()]})")
 
-def format_kor_date(date):
-    return date.strftime("%m/%d(%a)").replace("Mon", "월").replace("Tue", "화").replace("Wed", "수").replace("Thu", "목").replace("Fri", "금").replace("Sat", "토").replace("Sun", "일")
+# 버튼 클릭 시 URL에 리다이렉트 없이 상태 변경만 수행
+prev_day = st.session_state["menu_date"] - timedelta(days=1)
+next_day = st.session_state["menu_date"] + timedelta(days=1)
+
+# 버튼을 하나의 row로 만들어 높이 일치
+col1, col2, col3 = st.columns([2, 4, 2])
+with col1:
+    if st.button(f"◀️ {format_kor_date(prev_day)}"):
+        st.session_state["menu_date"] = prev_day
+with col3:
+    if st.button(f"{format_kor_date(next_day)} ▶️"):
+        st.session_state["menu_date"] = next_day
 
 # 버튼 영역
 st.markdown("""
