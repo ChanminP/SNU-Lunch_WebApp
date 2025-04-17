@@ -4,19 +4,21 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+# 📅 오늘 날짜
+today = datetime.now().strftime("%Y-%m-%d")
+
+# 📄 Streamlit 설정
 st.set_page_config(page_title="서울대 점심 식단", layout="centered")
 st.title("🥗 서울대학교 점심 식단")
-
-today = datetime.now().strftime("%Y-%m-%d")
 st.caption(f"{today} 기준")
 
-# 1. 웹페이지 요청
+# 🔍 식단 페이지 크롤링
 url = f"https://snuco.snu.ac.kr/foodmenu/?date={today}&orderby=DESC"
 response = requests.get(url)
 response.encoding = "utf-8"
 soup = BeautifulSoup(response.text, "html.parser")
 
-# 2. 식당명 필터
+# ✅ 대상 식당
 target_places = {
     "학생회관식당",
     "두레미담",
@@ -27,9 +29,9 @@ target_places = {
 
 table = soup.find("table")
 rows = table.find_all("tr")
+
 menu_dict = {}
 
-# 3. 데이터 파싱
 for row in rows[1:]:
     cols = row.find_all("td")
     if len(cols) < 3:
@@ -83,21 +85,22 @@ for row in rows[1:]:
     if cleaned_lines:
         menu_dict[place] = cleaned_lines
 
-# 4. 테이블로 출력
+# 📊 표로 정리 (줄바꿈 사용!)
 rows = []
 for place, menus in menu_dict.items():
-    rows.append({"식당": place, "메뉴": " ".join(menus)})
+    rows.append({"식당": place, "메뉴": "\n".join(menus)})
 
 df = pd.DataFrame(rows)
 df.index += 1
 
-# 5. 가운데 정렬
+# 🎨 가운데 정렬 CSS
 st.markdown("""
 <style>
 thead tr th:first-child {text-align: center}
 tbody th {text-align: center}
-td {text-align: center}
+td {text-align: center !important}
 </style>
 """, unsafe_allow_html=True)
 
+# 🖥️ 출력
 st.table(df)
