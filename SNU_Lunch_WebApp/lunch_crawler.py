@@ -6,9 +6,11 @@ from datetime import datetime
 import os
 import json
 
+# 📅 오늘 날짜 자동 설정
 today = datetime.now().strftime("%Y-%m-%d")
 url = f"https://snuco.snu.ac.kr/foodmenu/?date={today}&orderby=DESC"
 
+# ✅ 대상 식당 이름들
 target_places = {
     "학생회관식당",
     "두레미담",
@@ -17,15 +19,18 @@ target_places = {
     "302동식당"
 }
 
+# 🌐 EdgeDriver 설정
 service = EdgeService("C:/edgedriver/msedgedriver.exe")
 options = EdgeOptions()
 options.add_argument('--headless')
 driver = webdriver.Edge(service=service, options=options)
 driver.get(url)
 
+# 🔍 HTML 파싱
 soup = BeautifulSoup(driver.page_source, "html.parser")
 driver.quit()
 
+# 📄 테이블에서 정보 추출
 table = soup.find('table')
 rows = table.find_all('tr')
 
@@ -39,6 +44,7 @@ for row in rows[1:]:
     raw_place = cols[0].get_text(strip=True)
     lunch_raw = cols[2].get_text("\n", strip=True)
 
+    # 전화번호 제거용 이름 필터링
     for name in target_places:
         if raw_place.startswith(name):
             place = name
@@ -46,8 +52,10 @@ for row in rows[1:]:
     else:
         continue
 
+    # 운영/혼잡 시간 제거
     lunch_lines = [line for line in lunch_raw.split('\n') if not line.strip().startswith('※')]
 
+    # 두레미담은 셀프코너만
     if place == "두레미담":
         output_lines = []
         selpo_flag = False
@@ -60,6 +68,7 @@ for row in rows[1:]:
                 output_lines.append(line)
         lunch_lines = output_lines
 
+    # 301동식당은 <식사> 부분만
     if place == "301동식당":
         output_lines = []
         pick = False
@@ -73,6 +82,7 @@ for row in rows[1:]:
                 output_lines.append(line)
         lunch_lines = output_lines
 
+    # 중복 제거
     seen = set()
     cleaned_lines = []
     for line in lunch_lines:
@@ -83,5 +93,6 @@ for row in rows[1:]:
     if cleaned_lines:
         menu_dict[place] = cleaned_lines
 
+# ✅ JSON 저장 (웹앱용)
 with open("menu_data.json", "w", encoding="utf-8") as f:
     json.dump(menu_dict, f, ensure_ascii=False, indent=2)
