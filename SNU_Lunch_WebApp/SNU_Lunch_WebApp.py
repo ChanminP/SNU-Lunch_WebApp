@@ -25,9 +25,13 @@ col1, col2, col3 = st.columns([2, 4, 2])
 with col1:
     if st.button(f"◀️ {format_kor_date(prev_day)}"):
         st.session_state["menu_date"] = prev_day
+        st.rerun()
+
 with col3:
     if st.button(f"{format_kor_date(next_day)} ▶️"):
         st.session_state["menu_date"] = next_day
+        st.rerun()
+
 
 # 🧠 타이틀 및 날짜 출력
 st.markdown(f"""
