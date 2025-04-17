@@ -16,14 +16,13 @@ response = requests.get(url)
 response.encoding = "utf-8"
 soup = BeautifulSoup(response.text, "html.parser")
 
-# 원하는 식당들
-target_places = {
+target_places = [
     "두레미담",
     "302동식당",
     "301동식당",
     "3식당",
     "학생회관식당"
-}
+]
 
 table = soup.find("table")
 rows = table.find_all("tr")
@@ -46,7 +45,6 @@ for row in rows[1:]:
 
     lunch_lines = [line for line in lunch_raw.split('\n') if not line.strip().startswith('※')]
 
-    # 두레미담: 셀프코너만
     if place == "두레미담":
         output_lines = []
         selpo_flag = False
@@ -59,7 +57,6 @@ for row in rows[1:]:
                 output_lines.append(line)
         lunch_lines = output_lines
 
-    # 301동식당: <식사> 항목만
     if place == "301동식당":
         output_lines = []
         pick = False
@@ -73,7 +70,6 @@ for row in rows[1:]:
                 output_lines.append(line)
         lunch_lines = output_lines
 
-    # 중복 제거
     seen = set()
     cleaned_lines = []
     for line in lunch_lines:
@@ -84,21 +80,22 @@ for row in rows[1:]:
     if cleaned_lines:
         menu_dict[place] = cleaned_lines
 
-# 줄바꿈 포함해서 DataFrame 생성
+# HTML 줄바꿈(<br>) 적용
 rows = []
 for place, menus in menu_dict.items():
-    rows.append({"식당": place, "메뉴": "\n".join(menus)})
+    rows.append({"식당": place, "메뉴": "<br>".join(menus)})
 
 df = pd.DataFrame(rows)
 df.index += 1
 
-# 테이블 가운데 정렬
+# 테이블 출력 (HTML 렌더링 포함)
 st.markdown("""
 <style>
 thead tr th:first-child {text-align: center}
 tbody th {text-align: center}
-td {text-align: center}
+td {text-align: center; vertical-align: middle}
 </style>
 """, unsafe_allow_html=True)
 
-st.table(df)
+# 줄바꿈 살린 테이블 렌더링
+st.write(df.to_html(escape=False, index=True), unsafe_allow_html=True)
