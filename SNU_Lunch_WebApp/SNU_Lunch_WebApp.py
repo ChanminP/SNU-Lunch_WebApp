@@ -85,54 +85,36 @@ rows = []
 for place, menus in menu_dict.items():
     rows.append({"식당": place, "메뉴": "<br>".join(menus)})
 
-df = pd.DataFrame(rows)
-df.index += 1
-
-# 테이블 출력 (HTML 렌더링 포함)
+df = pd.DataFrame(rows, columns=["식당", "메뉴"])
 st.markdown("""
 <style>
-/* 전체 페이지 마진 조정 */
 main {
     padding-top: 10px !important;
     padding-bottom: 10px !important;
     padding-left: 40px !important;
     padding-right: 40px !important;
 }
-
-/* 표 내부 스타일 */
 table {
     width: 100% !important;
     table-layout: fixed;
     border-collapse: collapse;
 }
-
-/* 헤더 가운데 정렬 */
 thead tr th {
     text-align: center !important;
     font-weight: bold !important;
 }
-
-/* 본문 셀 가운데 정렬 + 여백 */
 td {
     text-align: center !important;
     vertical-align: middle !important;
     padding: 8px 12px !important;
 }
-
-/* 인덱스 열 숨기기 */
-thead th:first-child, tbody th:first-child {
-    display: none;
-}
-
-/* 줄 높이 줄이기 */
 tbody td, tbody th {
     line-height: 1.4;
 }
 </style>
 """, unsafe_allow_html=True)
 
-
-# 줄바꿈 살린 테이블 렌더링
 st.write(df.to_html(index=False, escape=False), unsafe_allow_html=True)
+
 
 
