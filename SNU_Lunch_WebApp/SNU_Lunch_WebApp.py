@@ -2,33 +2,51 @@ import streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 
 st.set_page_config(page_title="서울대 점심 식단", layout="centered")
-st.title("🥗 서울대학교 점심 식단")
 
-today = datetime.now().strftime("%Y-%m-%d")
-st.caption(f"{today} 기준")
+# ⏱ 날짜 선택 버튼
+if "menu_date" not in st.session_state:
+    st.session_state["menu_date"] = datetime.now()
 
-# 웹 요청
+col1, col2, col3 = st.columns([1, 2, 1])
+with col1:
+    if st.button("◀️ 이전날"):
+        st.session_state["menu_date"] -= timedelta(days=1)
+with col3:
+    if st.button("다음날 ▶️"):
+        st.session_state["menu_date"] += timedelta(days=1)
+
+today = st.session_state["menu_date"].strftime("%Y-%m-%d")
+
+# 🧠 헤더 (반응형 글씨 크기)
+st.markdown(f"""
+<h1 style='text-align: center; font-size: max(2.2rem, 4vw);'>
+🥗 서울대학교 점심 식단
+</h1>
+<p style='text-align: center; color: gray'>{today} 기준</p>
+""", unsafe_allow_html=True)
+
+# 🌐 웹 크롤링
 url = f"https://snuco.snu.ac.kr/foodmenu/?date={today}&orderby=DESC"
 response = requests.get(url)
 response.encoding = "utf-8"
 soup = BeautifulSoup(response.text, "html.parser")
 
-target_places = [
+target_places = {
+    "학생회관식당",
     "두레미담",
-    "302동식당",
-    "301동식당",
     "3식당",
-    "학생회관식당"
-]
+    "301동식당",
+    "302동식당"
+}
 
 table = soup.find("table")
-rows = table.find_all("tr")
+rows_html = table.find_all("tr") if table else []
 menu_dict = {}
 
-for row in rows[1:]:
+for row in rows_html[1:]:
     cols = row.find_all("td")
     if len(cols) < 3:
         continue
@@ -80,12 +98,14 @@ for row in rows[1:]:
     if cleaned_lines:
         menu_dict[place] = cleaned_lines
 
-# HTML 줄바꿈(<br>) 적용
+# 📄 테이블 변환
 rows = []
 for place, menus in menu_dict.items():
     rows.append({"식당": place, "메뉴": "<br>".join(menus)})
 
 df = pd.DataFrame(rows, columns=["식당", "메뉴"])
+
+# 🎨 스타일 적용 + 출력
 st.markdown("""
 <style>
 main {
@@ -115,6 +135,3 @@ tbody td, tbody th {
 """, unsafe_allow_html=True)
 
 st.write(df.to_html(index=False, escape=False), unsafe_allow_html=True)
-
-
-
