@@ -91,11 +91,28 @@ df.index += 1
 # 테이블 출력 (HTML 렌더링 포함)
 st.markdown("""
 <style>
-thead tr th:first-child {text-align: center}
-tbody th {text-align: center}
-td {text-align: center; vertical-align: middle}
+/* 헤더 가운데 정렬 */
+thead tr th {
+    text-align: center !important;
+}
+
+/* 셀 가운데 정렬 + 여백 추가 */
+td {
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 12px 16px !important;  /* 위아래12px, 좌우16px */
+}
+
+/* 인덱스 숫자 가운데 정렬 */
+tbody th {
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 12px 16px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
+
 # 줄바꿈 살린 테이블 렌더링
 st.write(df.to_html(escape=False, index=True), unsafe_allow_html=True)
+
