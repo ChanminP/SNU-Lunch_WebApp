@@ -86,7 +86,7 @@ for row in rows[1:]:
 # 4. 테이블로 출력
 rows = []
 for place, menus in menu_dict.items():
-    rows.append({"식당": place, "메뉴": "\n".join(menus)})
+    rows.append({"식당": place, "메뉴": " ".join(menus)})
 
 df = pd.DataFrame(rows)
 df.index += 1
