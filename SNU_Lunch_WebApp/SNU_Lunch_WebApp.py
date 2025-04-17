@@ -26,17 +26,18 @@ next_day = today_date + timedelta(days=1)
 st.markdown(f"""
 <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;'>
     <form method="post">
-        <button name="prev" type="submit" style="font-size: 16px; padding: 8px 14px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0;'>
+        <button name="prev" type="submit" style="font-size: 16px; padding: 8px 14px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0;">
             ◀️ {format_kor_date(prev_day)}
         </button>
     </form>
     <form method="post">
-        <button name="next" type="submit" style="font-size: 16px; padding: 8px 14px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0;'>
+        <button name="next" type="submit" style="font-size: 16px; padding: 8px 14px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; background-color: #f0f0f0;">
             {format_kor_date(next_day)} ▶️
         </button>
     </form>
 </div>
 """, unsafe_allow_html=True)
+
 
 # 버튼 동작
 form_data = st.query_params
