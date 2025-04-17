@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import platform
 
 st.set_page_config(page_title="서울대 점심 식단", layout="centered")
 
@@ -16,55 +15,47 @@ def format_kor_date(date: datetime) -> str:
     weekday_kor = ["월", "화", "수", "목", "금", "토", "일"]
     return date.strftime(f"%m/%d({weekday_kor[date.weekday()]})")
 
-# 버튼 클릭 시 URL에 리다이렉트 없이 상태 변경만 수행
-prev_day = st.session_state["menu_date"] - timedelta(days=1)
-next_day = st.session_state["menu_date"] + timedelta(days=1)
+# 현재 날짜 기준으로 전날/다음날 계산
+menu_date = st.session_state["menu_date"]
+prev_day = menu_date - timedelta(days=1)
+next_day = menu_date + timedelta(days=1)
 
-# 버튼을 하나의 row로 만들어 높이 일치
+# 버튼 생성
 col1, col2, col3 = st.columns([2, 4, 2])
 with col1:
-    if st.button(f"◀️ {format_kor_date(prev_day)}"):
+    if st.button(f"\u25c0\ufe0f {format_kor_date(prev_day)}"):
         st.session_state["menu_date"] = prev_day
 with col3:
-    if st.button(f"{format_kor_date(next_day)} ▶️"):
+    if st.button(f"{format_kor_date(next_day)} \u25b6\ufe0f"):
         st.session_state["menu_date"] = next_day
 
-
-# 버튼 처리
-if st.session_state.get("_form_data"):
-    if st.session_state["_form_data"].get("prev") is not None:
-        st.session_state["menu_date"] = prev_day
-    elif st.session_state["_form_data"].get("next") is not None:
-        st.session_state["menu_date"] = next_day
-
-menu_date = st.session_state["menu_date"]
-today = menu_date.strftime("%Y-%m-%d")
-
-# 반응형 타이틀 (데스크탑/모바일 대응)
+# 타이틀 표시
 st.markdown(f"""
-<h1 style='text-align: center; font-size: clamp(1.8rem, 4vw, 2.5rem);'>
-🥗 서울대학교 점심 식단
+<h1 style='text-align: center; font-size: clamp(1.8rem, 4vw, 2.2rem);'>
+🥗 서울대학교 점심 식당
 </h1>
-<p style='text-align: center; color: gray'>{today} 기준</p>
+<p style='text-align: center; color: gray'>{menu_date.strftime("%Y-%m-%d")} 기준</p>
 """, unsafe_allow_html=True)
 
 # 웹 크롤링
-url = f"https://snuco.snu.ac.kr/foodmenu/?date={today}&orderby=DESC"
+url = f"https://snuco.snu.ac.kr/foodmenu/?date={menu_date.strftime('%Y-%m-%d')}&orderby=DESC"
 response = requests.get(url)
 response.encoding = "utf-8"
 soup = BeautifulSoup(response.text, "html.parser")
 
+# 대상 식당
 target_places = {
     "학생회관식당",
-    "두레미담",
+    "두레미달",
     "3식당",
     "301동식당",
     "302동식당"
 }
 
+# 식단 테이블 파싱
+menu_dict = {}
 table = soup.find("table")
 rows_html = table.find_all("tr") if table else []
-menu_dict = {}
 
 for row in rows_html[1:]:
     cols = row.find_all("td")
@@ -83,7 +74,7 @@ for row in rows_html[1:]:
 
     lunch_lines = [line for line in lunch_raw.split('\n') if not line.strip().startswith('※')]
 
-    if place == "두레미담":
+    if place == "두레미달":
         output_lines = []
         selpo_flag = False
         for line in lunch_lines:
@@ -129,10 +120,7 @@ df = pd.DataFrame(rows, columns=["식당", "메뉴"])
 st.markdown("""
 <style>
 main {
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
-    padding-left: 40px !important;
-    padding-right: 40px !important;
+    padding: 10px 40px !important;
 }
 table {
     width: 100% !important;
@@ -151,16 +139,7 @@ td {
 tbody td, tbody th {
     line-height: 1.4;
 }
-button {
-    font-size: 16px;
-    padding: 8px 14px;
-    margin: 5px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background-color: #f0f0f0;
-}
 </style>
 """, unsafe_allow_html=True)
 
 st.write(df.to_html(index=False, escape=False), unsafe_allow_html=True)
-
